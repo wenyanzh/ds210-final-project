@@ -1,12 +1,6 @@
-use std::env;
-use std::fs::File;
-use std::io::prelude::*;
-use std::process;
-
 use plotters::prelude::*;
 use serde::Deserialize;
 use std::collections::HashMap;
-use std::error::Error;
 use std::hash::Hash;
 
 #[allow(dead_code, non_snake_case)]
@@ -17,13 +11,6 @@ use std::hash::Hash;
 struct Edge {
     source: String,
     target: String,
-}
-
-// Node struct where sub_name is the unique SOURECE_SUBREDDIT and
-// edges is TARGET_SUBREDDITs that the source is connected to
-struct Node {
-    sub_name: String,
-    edges: Vec<Edge>,
 }
 
 // read the csv file
@@ -46,17 +33,12 @@ fn read_csv(path: &str) -> Vec<Edge> {
     return edges;
 }
 
-// adj list function: convert list of edges to an adjacency list of nodes in hashmap
+// create an adjacency list using HashMap, where each node has a list of the neighbors. 
+// the key of the hashmap is a unique SOURCE_REDDIT and the value are TARGET_SUBREDDITs connected to it 
 fn adj_list(edges: Vec<Edge>) -> HashMap<String, Vec<String>> {
-    //let n = edges.len();
     let mut graph_list: HashMap<String, Vec<String>> = HashMap::new();
     for v in edges.iter() {
         if graph_list.contains_key(&v.source) {
-            //let index = graph_list.iter().position(|x| x == &v.source.to_string()).unwrap();
-            //graph_list.insert(v.source, v.target);
-            // Get HashMap entry for source, store in variable X .get
-            // Append target to X .append
-            // Set HashMap entry for source to X, update hashmap .set
             let mut x = graph_list.get(&v.source).unwrap().clone();
             x.push(v.target.clone());
             graph_list.insert(v.source.clone(), x);
@@ -68,65 +50,57 @@ fn adj_list(edges: Vec<Edge>) -> HashMap<String, Vec<String>> {
     return graph_list;
 }
 
-// calculate length of each node's and store the length into a vector
+// calculate the length of each node’s adjacency list and store the length into a vector
 fn calc_length(graph_list: HashMap<String, Vec<String>>) -> Vec<usize> {
     let mut length_vec: Vec<usize> = vec![];
-    for (k, v) in graph_list.into_iter() {
+    for (_k, v) in graph_list.into_iter() {
         let length = v.len();
         length_vec.push(length);
     }
     return length_vec;
 }
 
-// calculate the frequency of each length and store the result into a new vector
+// calculate the frequency of each length and store the frequency into a new vector
 fn length_freq(length_vec: Vec<usize>) -> Vec<(usize, usize)> {
     let mut length_freq_vec: Vec<(usize, usize)> = vec![];
     let mut length_freq_hashmap: HashMap<usize, usize> = HashMap::new();
-    //let mut freq: usize = 0;
     for length in length_vec {
         if length_freq_hashmap.contains_key(&length) {
             let freq = length_freq_hashmap.get(&length).unwrap();
             length_freq_hashmap.insert(length, freq + 1);
-            //freq += 1;
         } else {
             length_freq_hashmap.insert(length, 1);
-            //freq = freq;
         }
-        //length_freq_hashmap.insert(length.0, freq);
     }
 
+    // get vector of (length, freq) pairs from HashMap
     for entry in length_freq_hashmap {
         length_freq_vec.push(entry);
     }
 
-    // get vector of (length, freq) pairs from HashMap
-    //length_freq_vec = length_freq_hashmap.into_values().collect();
-    //length_freq_vec = Vec::from_iter(length_freq_hashmap.iter());
+    // sort length in descending order
     length_freq_vec.sort();
     return length_freq_vec;
 }
 
-// in main function, plot the frequency using Rust Plotters
+// in main function, plot the frequencies using Rust Plotters
 fn main() {
     let data = read_csv("./soc-redditHyperlinks-body.tsv");
-    //println!("{:?}", data);
     let graph_list_main = adj_list(data);
-    //println!("{:?}", graph_list_main);
     let calc_length_main = calc_length(graph_list_main);
-    //println!("{:?}", calc_length_main);
     let length_freq_main = length_freq(calc_length_main);
     println!("{:?}", length_freq_main);
 
     // plot the freqency
-    let distn_graph = BitMapBackend::new("../distn_3.png", (600, 400)).into_drawing_area();
+    let distn_graph = BitMapBackend::new("./distn.png", (600, 400)).into_drawing_area();
     distn_graph.fill(&WHITE).unwrap();
 
     let mut ctx = ChartBuilder::on(&distn_graph)
-        .set_label_area_size(LabelAreaPosition::Left, 40.0)
+        .set_label_area_size(LabelAreaPosition::Left, 50.0)
         .set_label_area_size(LabelAreaPosition::Bottom, 40.0)
-        .set_label_area_size(LabelAreaPosition::Right, 40.0)
+        .set_label_area_size(LabelAreaPosition::Right, 50.0)
         .set_label_area_size(LabelAreaPosition::Top, 40.0)
-        .caption("Distribution of length frequency", ("sans-serif", 40.0))
+        .caption("Distribution of Frequencies of Lengths", ("sans-serif", 40.0))
         .build_cartesian_2d(0.0f64..90.0f64, 0f64..4500f64)
         .unwrap();
 
