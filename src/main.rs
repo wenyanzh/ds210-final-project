@@ -85,14 +85,15 @@ fn length_freq(length_vec: Vec<usize>) -> Vec<(usize, usize)> {
 
 // in main function, plot the frequencies using Rust Plotters
 fn main() {
-    let data = read_csv("./soc-redditHyperlinks-body.tsv");
+    let data = read_csv("../soc-redditHyperlinks-body.tsv");
     let graph_list_main = adj_list(data);
+    println!("{:?}", graph_list_main);
     let calc_length_main = calc_length(graph_list_main);
     let length_freq_main = length_freq(calc_length_main);
     println!("{:?}", length_freq_main);
 
     // plot the freqency
-    let distn_graph = BitMapBackend::new("./distn.png", (600, 400)).into_drawing_area();
+    let distn_graph = BitMapBackend::new("../distn.png", (600, 400)).into_drawing_area();
     distn_graph.fill(&WHITE).unwrap();
 
     let mut ctx = ChartBuilder::on(&distn_graph)
